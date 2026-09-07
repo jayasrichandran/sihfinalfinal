@@ -13,6 +13,9 @@ let currentCategory = 'numbers';
 let currentCardIndex = 0;
 let currentMode = 'learn';
 let currentAudioObj = null;
+let currentPhraseAudio = null;
+let currentPhraseBtnId = null;
+const phraseAudioAvailability = new Map();
 
 /* ============================================================
    ONLINE / OFFLINE STATUS BADGE
@@ -35,6 +38,13 @@ window.addEventListener('offline', updateStatusBadge);
 /* ============================================================
    TAB NAVIGATION
    ============================================================ */
+function switchTab(tabId) {
+  const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+  if (btn) {
+    btn.click();
+  }
+}
+
 function initTabs() {
   const buttons = document.querySelectorAll('.tab-btn');
   const panels  = document.querySelectorAll('.tab-panel');
@@ -47,8 +57,19 @@ function initTabs() {
       btn.classList.add('active');
       document.getElementById(btn.dataset.tab).classList.add('active');
 
-      // Stop any playing audio when switching tabs
+      // Stop any playing flashcard audio when switching tabs
       if (typeof stopCurrentFlashcardAudio === 'function') stopCurrentFlashcardAudio();
+
+      // Stop any playing phrase audio when switching tabs
+      if (currentPhraseAudio) {
+        currentPhraseAudio.pause();
+        currentPhraseAudio = null;
+        if (currentPhraseBtnId) {
+          const prevBtn = document.querySelector(`.santhali-audio-btn[data-id="${currentPhraseBtnId}"]`);
+          if (prevBtn) prevBtn.classList.remove('playing');
+          currentPhraseBtnId = null;
+        }
+      }
 
       // Refresh corrections log when that tab is opened
       if (btn.dataset.tab === 'tab-corrections') renderCorrectionsLog();
@@ -67,8 +88,78 @@ function showToast(msg) {
 }
 
 /* ============================================================
-   SCREEN 1 — PHRASEBOOK
+   SCREEN 1 — PHRASEBOOK AUDIO & CONTROLS
    ============================================================ */
+async function checkAllPhraseAudio() {
+  if (!allPhrases || !allPhrases.length) return;
+  await Promise.all(allPhrases.map(async (p) => {
+    try {
+      const res = await fetch(`./assets/audio/phrases/${p.id}.mp3`, { method: 'HEAD' });
+      phraseAudioAvailability.set(p.id, res.ok);
+    } catch (e) {
+      phraseAudioAvailability.set(p.id, false);
+    }
+  }));
+}
+
+function playPhraseAudio(phraseId, event) {
+  if (event) event.stopPropagation();
+
+  const isAvailable = phraseAudioAvailability.get(phraseId);
+  if (!isAvailable) {
+    showToast('ℹ️ Native-speaker audio recording for this phrase is not yet available.');
+    return;
+  }
+
+  const btn = document.querySelector(`.santhali-audio-btn[data-id="${phraseId}"]`);
+
+  // Stop currently playing phrase audio
+  if (currentPhraseAudio) {
+    currentPhraseAudio.pause();
+    currentPhraseAudio.currentTime = 0;
+    if (currentPhraseBtnId) {
+      const prevBtn = document.querySelector(`.santhali-audio-btn[data-id="${currentPhraseBtnId}"]`);
+      if (prevBtn) prevBtn.classList.remove('playing');
+    }
+  }
+
+  // Toggle off if same audio button was clicked while playing
+  if (currentPhraseBtnId === phraseId && currentPhraseAudio) {
+    currentPhraseAudio = null;
+    currentPhraseBtnId = null;
+    return;
+  }
+
+  const audio = new Audio(`./assets/audio/phrases/${phraseId}.mp3`);
+  currentPhraseAudio = audio;
+  currentPhraseBtnId = phraseId;
+  if (btn) btn.classList.add('playing');
+
+  audio.play().catch(err => {
+    console.warn('Phrase audio playback error:', err);
+    if (btn) btn.classList.remove('playing');
+    currentPhraseAudio = null;
+    currentPhraseBtnId = null;
+    showToast('⚠️ Could not play audio file.');
+  });
+
+  audio.onended = () => {
+    if (btn) btn.classList.remove('playing');
+    if (currentPhraseBtnId === phraseId) {
+      currentPhraseAudio = null;
+      currentPhraseBtnId = null;
+    }
+  };
+
+  audio.onerror = () => {
+    if (btn) btn.classList.remove('playing');
+    if (currentPhraseBtnId === phraseId) {
+      currentPhraseAudio = null;
+      currentPhraseBtnId = null;
+    }
+  };
+}
+
 async function initPhrasebook() {
   const container = document.getElementById('phrase-cards');
   const searchEl  = document.getElementById('phrase-search');
@@ -81,6 +172,7 @@ async function initPhrasebook() {
     return;
   }
 
+  await checkAllPhraseAudio();
   renderPhrases(allPhrases);
 
   searchEl.addEventListener('input', () => {
@@ -91,6 +183,8 @@ async function initPhrasebook() {
     );
     renderPhrases(filtered);
   });
+
+  initSpeechRecognition();
 }
 
 function renderPhrases(phrases) {
@@ -99,11 +193,27 @@ function renderPhrases(phrases) {
     container.innerHTML = '<p class="empty-state">No phrases match your search.</p>';
     return;
   }
-  container.innerHTML = phrases.map(p => `
+  container.innerHTML = phrases.map(p => {
+    const hasAudio = phraseAudioAvailability.get(p.id) === true;
+    const isPlaying = currentPhraseBtnId === p.id;
+    return `
     <div class="phrase-card" data-id="${p.id}">
       <div class="phrase-hindi">${p.hindi}</div>
       <div class="phrase-english">${p.english}</div>
-      <div class="phrase-santhali">${p.santhali}</div>
+      <div class="phrase-santhali">
+        <span>${p.santhali}</span>
+        <button
+          type="button"
+          class="santhali-audio-btn ${hasAudio ? 'enabled' : 'disabled'} ${isPlaying ? 'playing' : ''}"
+          data-id="${p.id}"
+          onclick="playPhraseAudio('${p.id}', event)"
+          title="${hasAudio ? 'Play Santhali audio' : 'Native-speaker audio recording for this phrase is not yet available.'}"
+          aria-label="${hasAudio ? 'Play Santhali audio' : 'Native-speaker audio recording for this phrase is not yet available.'}"
+          ${hasAudio ? '' : 'disabled'}
+        >
+          🔊
+        </button>
+      </div>
       <span class="status-tag ${p.status === 'verified' ? 'verified' : 'pending'}">
         ${p.status === 'verified' ? '✓ Verified' : '⏳ Pending Verification'}
       </span>
@@ -116,7 +226,8 @@ function renderPhrases(phrases) {
         ✏️ Suggest a Correction
       </button>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 /* ============================================================
@@ -311,6 +422,13 @@ function renderCurriculum() {
 function toggleTopic(topicId) {
   const card = document.getElementById(`topic-${topicId}`);
   if (card) card.classList.toggle('expanded');
+}
+
+function expandTopic(topicId) {
+  const card = document.getElementById(`topic-${topicId}`);
+  if (card && !card.classList.contains('expanded')) {
+    card.classList.add('expanded');
+  }
 }
 
 function showQuiz(topicId, itemId) {
@@ -857,7 +975,11 @@ function renderCorrectionsLog() {
             <td class="td-hindi">${e.hindiText}</td>
             <td style="font-size:0.78rem;">${e.originalTranslation}</td>
             <td style="color:var(--clr-white);font-weight:600;">${e.suggestedTranslation}</td>
-            <td><span class="log-status-tag">⏳ Awaiting native-speaker review</span></td>
+            <td>
+              ${e.status === 'unmatched_phrase'
+                ? '<span class="log-status-tag unmatched">⚠️ Unmatched Phrase</span>'
+                : '<span class="log-status-tag">⏳ Awaiting native-speaker review</span>'}
+            </td>
           </tr>
         `).join('')}
       </tbody>
@@ -872,6 +994,394 @@ function formatDate(iso) {
       hour: '2-digit', minute: '2-digit'
     });
   } catch { return iso; }
+}
+
+/* ============================================================
+   SPEECH RECOGNITION & PHRASE / CURRICULUM MATCHING (ONLINE / BROWSER-DEPENDENT)
+   ============================================================ */
+let recognitionInstance = null;
+let isLiveSessionActive = false;
+let speechRestartTimeout = null;
+
+function initSpeechRecognition() {
+  const speechBtn = document.getElementById('speech-btn');
+  const speechStatus = document.getElementById('speech-status');
+  if (!speechBtn) return;
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    speechBtn.addEventListener('click', () => {
+      if (speechStatus) {
+        speechStatus.className = 'speech-status-msg warning offline-notice';
+        speechStatus.textContent = "Live speech recognition isn't supported in this browser. Try Google Chrome or Microsoft Edge. All other educational features continue to work offline.";
+      }
+    });
+    return;
+  }
+
+  try {
+    recognitionInstance = new SpeechRecognition();
+    recognitionInstance.lang = 'hi-IN';
+    recognitionInstance.continuous = true;
+    recognitionInstance.interimResults = true;
+  } catch (err) {
+    speechBtn.addEventListener('click', () => {
+      if (speechStatus) {
+        speechStatus.className = 'speech-status-msg warning offline-notice';
+        speechStatus.textContent = "Live speech recognition could not be initialized in this browser. All other educational features continue to work offline.";
+      }
+    });
+    return;
+  }
+
+  speechBtn.addEventListener('click', () => {
+    if (isLiveSessionActive) {
+      stopLiveSession();
+    } else {
+      startLiveSession();
+    }
+  });
+
+  recognitionInstance.onresult = (event) => {
+    const speechEndTime = performance.now();
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        const recognizedText = event.results[i][0].transcript.trim();
+        if (recognizedText) {
+          handleRecognizedHindi(recognizedText, speechEndTime);
+        }
+      }
+    }
+  };
+
+  recognitionInstance.onerror = (event) => {
+    if (event.error === 'network') {
+      handleOfflineSpeechError();
+    } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+      isLiveSessionActive = false;
+      updateLiveSessionUI(false);
+      if (speechStatus) {
+        speechStatus.className = 'speech-status-msg error';
+        speechStatus.textContent = 'Microphone permission was denied. Please allow microphone access in your browser settings.';
+      }
+    } else if (event.error === 'no-speech') {
+      // Silence timeout — automatic silent restart in onend handles this while session is active
+    } else {
+      console.warn('Speech recognition event:', event.error);
+    }
+  };
+
+  recognitionInstance.onend = () => {
+    if (isLiveSessionActive) {
+      clearTimeout(speechRestartTimeout);
+      speechRestartTimeout = setTimeout(() => {
+        if (isLiveSessionActive) {
+          try {
+            recognitionInstance.start();
+          } catch (e) {
+            if (!navigator.onLine) {
+              handleOfflineSpeechError();
+            }
+          }
+        }
+      }, 150);
+    } else {
+      updateLiveSessionUI(false);
+    }
+  };
+}
+
+function handleOfflineSpeechError() {
+  isLiveSessionActive = false;
+  clearTimeout(speechRestartTimeout);
+  if (recognitionInstance) {
+    try { recognitionInstance.stop(); } catch (e) {}
+  }
+  updateLiveSessionUI(false);
+
+  const speechStatus = document.getElementById('speech-status');
+  if (speechStatus) {
+    speechStatus.className = 'speech-status-msg warning offline-notice';
+    speechStatus.textContent = 'Live speech recognition requires an internet connection in this browser. All other educational features continue to work offline.';
+  }
+}
+
+function startLiveSession() {
+  const speechStatus = document.getElementById('speech-status');
+  if (!recognitionInstance) return;
+
+  if (!navigator.onLine) {
+    handleOfflineSpeechError();
+    return;
+  }
+
+  isLiveSessionActive = true;
+  clearTimeout(speechRestartTimeout);
+
+  updateLiveSessionUI(true);
+  if (speechStatus) {
+    speechStatus.className = 'speech-status-msg';
+    speechStatus.textContent = '🎙️ Live Classroom Session active — listening for continuous classroom instructions…';
+  }
+
+  try {
+    recognitionInstance.start();
+  } catch (e) {
+    if (!navigator.onLine) {
+      handleOfflineSpeechError();
+    }
+  }
+}
+
+function stopLiveSession() {
+  isLiveSessionActive = false;
+  clearTimeout(speechRestartTimeout);
+  if (recognitionInstance) {
+    try { recognitionInstance.stop(); } catch (e) {}
+  }
+  updateLiveSessionUI(false);
+  const speechStatus = document.getElementById('speech-status');
+  if (speechStatus) {
+    speechStatus.className = 'speech-status-msg';
+    speechStatus.textContent = 'Live session ended.';
+  }
+}
+
+function updateLiveSessionUI(isActive) {
+  const speechBtn = document.getElementById('speech-btn');
+  const liveIndicator = document.getElementById('live-indicator');
+  if (!speechBtn) return;
+
+  if (isActive) {
+    speechBtn.classList.add('listening');
+    speechBtn.innerHTML = '🔴 Stop Live Session';
+    if (liveIndicator) liveIndicator.style.display = 'inline-flex';
+  } else {
+    speechBtn.classList.remove('listening');
+    speechBtn.innerHTML = '🎙️ Start Live Session';
+    if (liveIndicator) liveIndicator.style.display = 'none';
+  }
+}
+
+function normalizeHindiText(text) {
+  if (!text) return '';
+  return text
+    .toLowerCase()
+    .replace(/[।.,?!;:\-"'()]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function findMatchingPhrase(speechText, phrases) {
+  const normSpeech = normalizeHindiText(speechText);
+  if (!normSpeech) return null;
+
+  // 1. Exact match first
+  for (const p of phrases) {
+    const normHindi = normalizeHindiText(p.hindi);
+    if (normHindi === normSpeech) {
+      return p;
+    }
+  }
+
+  // 2. Partial / fuzzy match (substring & word overlap)
+  const speechWords = normSpeech.split(' ').filter(w => w.length > 0);
+  let bestMatch = null;
+  let highestScore = 0;
+
+  for (const p of phrases) {
+    const normHindi = normalizeHindiText(p.hindi);
+
+    // Substring match check
+    if (normHindi.includes(normSpeech) || normSpeech.includes(normHindi)) {
+      const minLen = Math.min(normHindi.length, normSpeech.length);
+      const maxLen = Math.max(normHindi.length, normSpeech.length);
+      const score = 0.75 + (minLen / maxLen) * 0.25;
+      if (score > highestScore) {
+        highestScore = score;
+        bestMatch = p;
+      }
+      continue;
+    }
+
+    // Word overlap check
+    const phraseWords = normHindi.split(' ').filter(w => w.length > 0);
+    if (speechWords.length === 0 || phraseWords.length === 0) continue;
+
+    let matchingWordsCount = 0;
+    for (const word of speechWords) {
+      if (phraseWords.includes(word)) {
+        matchingWordsCount++;
+      }
+    }
+
+    const speechOverlap = matchingWordsCount / speechWords.length;
+    const phraseOverlap = matchingWordsCount / phraseWords.length;
+    const score = (speechOverlap * 0.6) + (phraseOverlap * 0.4);
+
+    if (matchingWordsCount > 0 && score > highestScore) {
+      highestScore = score;
+      bestMatch = p;
+    }
+  }
+
+  if (bestMatch && highestScore >= 0.3) {
+    return bestMatch;
+  }
+
+  return null;
+}
+
+function findMatchingCurriculumItem(speechText, curriculum) {
+  const flattened = [];
+  for (const topic of curriculum) {
+    const displayItems = topic.worksheetType === 'number_spelling'
+      ? (topic.numberSpelling || []).map((item, index) => ({
+          id: `ns${item.number ?? index + 1}`,
+          hindi: item.hindi,
+          english: item.english || '',
+          santhali: item.santhali
+        }))
+      : (topic.items || []);
+
+    for (const item of displayItems) {
+      flattened.push({
+        ...item,
+        topicId: topic.id,
+        topicName: topic.topic
+      });
+    }
+  }
+  return findMatchingPhrase(speechText, flattened);
+}
+
+async function ensureCurriculumLoaded() {
+  if (!allCurriculum.length) {
+    try {
+      const res = await fetch('./data/curriculum.json');
+      allCurriculum = await res.json();
+    } catch (e) {
+      console.error('Could not load curriculum data for matching:', e);
+    }
+  }
+}
+
+async function handleRecognizedHindi(recognizedText, speechEndTime) {
+  const speechStatus = document.getElementById('speech-status');
+  const latencyBadge = document.getElementById('latency-badge');
+  const latencyVal   = document.getElementById('latency-val');
+
+  function updateLatencyDisplay() {
+    if (speechEndTime && latencyBadge && latencyVal) {
+      const playbackStartTime = performance.now();
+      const latencySec = Math.max(0.1, (playbackStartTime - speechEndTime) / 1000).toFixed(1);
+      latencyVal.textContent = `${latencySec}s`;
+      latencyBadge.style.display = 'inline-flex';
+    }
+  }
+
+  // 1. Search phrases first
+  const phraseMatched = findMatchingPhrase(recognizedText, allPhrases);
+
+  if (phraseMatched) {
+    // Reset search filter if active
+    const searchEl = document.getElementById('phrase-search');
+    if (searchEl && searchEl.value) {
+      searchEl.value = '';
+      renderPhrases(allPhrases);
+    }
+
+    // Automatically trigger phrase audio playback if available
+    const hasAudio = phraseAudioAvailability.get(phraseMatched.id);
+    if (hasAudio) {
+      playPhraseAudio(phraseMatched.id);
+    }
+    updateLatencyDisplay();
+
+    if (speechStatus) {
+      speechStatus.className = 'speech-status-msg success';
+      speechStatus.textContent = `✓ Recognized: "${recognizedText}" — Matched phrase: "${phraseMatched.hindi}"`;
+    }
+
+    switchTab('tab-phrasebook');
+
+    // Scroll to and visually highlight the matched phrase card
+    setTimeout(() => {
+      const cardEl = document.querySelector(`.phrase-card[data-id="${phraseMatched.id}"]`);
+      if (cardEl) {
+        cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        cardEl.classList.add('card-highlight');
+        setTimeout(() => {
+          cardEl.classList.remove('card-highlight');
+        }, 3500);
+      }
+    }, 150);
+    return;
+  }
+
+  // 2. Search curriculum next
+  await ensureCurriculumLoaded();
+  const curriculumMatched = findMatchingCurriculumItem(recognizedText, allCurriculum);
+
+  if (curriculumMatched) {
+    updateLatencyDisplay();
+    if (speechStatus) {
+      speechStatus.className = 'speech-status-msg success';
+      speechStatus.textContent = `✓ Recognized: "${recognizedText}" — Found in Curriculum: ${curriculumMatched.topicName}`;
+    }
+
+    // Automatically switch to Curriculum tab, expand topic, and highlight matching term
+    switchTab('tab-curriculum');
+    expandTopic(curriculumMatched.topicId);
+
+    setTimeout(() => {
+      const cardEl = document.getElementById(`fc-${curriculumMatched.id}`);
+      if (cardEl) {
+        cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        cardEl.classList.add('card-highlight');
+        setTimeout(() => {
+          cardEl.classList.remove('card-highlight');
+        }, 3500);
+      }
+    }, 150);
+    return;
+  }
+
+  // 3. No match in phrases OR curriculum — treat as unmatched
+  if (speechStatus) {
+    speechStatus.className = 'speech-status-msg warning';
+    speechStatus.textContent = `⚠️ Recognized: "${recognizedText}" — Phrase not in bank (auto-flagged for review)`;
+  }
+
+  logUnmatchedPhrase(recognizedText);
+}
+
+function logUnmatchedPhrase(hindiText) {
+  const norm = normalizeHindiText(hindiText);
+  if (!norm) return;
+
+  const existing = JSON.parse(localStorage.getItem(CORRECTIONS_KEY) || '[]');
+  const isDuplicate = existing.some(e => 
+    e.status === 'unmatched_phrase' && normalizeHindiText(e.hindiText) === norm
+  );
+  if (isDuplicate) return;
+
+  const entry = {
+    phraseId: 'unmatched_' + Date.now(),
+    hindiText: hindiText,
+    originalTranslation: 'N/A (Speech input)',
+    suggestedTranslation: 'Phrase not in bank — auto-flagged for review',
+    status: 'unmatched_phrase',
+    timestamp: new Date().toISOString()
+  };
+  existing.push(entry);
+  localStorage.setItem(CORRECTIONS_KEY, JSON.stringify(existing));
+
+  const correctionsTab = document.getElementById('tab-corrections');
+  if (correctionsTab && correctionsTab.classList.contains('active')) {
+    renderCorrectionsLog();
+  }
 }
 
 /* ============================================================

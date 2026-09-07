@@ -43,6 +43,22 @@
         This is a disclosed limitation of this prototype.
       </p>
 
+      <div class="phrasebook-controls">
+        <div class="live-session-bar">
+          <button id="speech-btn" class="btn btn-maroon speech-btn" aria-label="Start Live Classroom Session">
+            🎙️ Start Live Session
+          </button>
+          <div id="live-indicator" class="live-indicator" style="display: none;">
+            <span class="live-pulse-dot"></span>
+            <span class="live-label">LIVE LISTENING</span>
+          </div>
+          <div id="latency-badge" class="latency-badge" style="display: none;">
+            ⏱️ Last match: <span id="latency-val">0.0s</span>
+          </div>
+        </div>
+        <div id="speech-status" class="speech-status-msg" role="status" aria-live="polite"></div>
+      </div>
+
       <input
         type="search"
         id="phrase-search"
