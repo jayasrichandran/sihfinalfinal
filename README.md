@@ -34,7 +34,7 @@ npx -y serve .
 
 ### Step 3 — Open in your browser
 
-Navigate to: **http://localhost:8000**
+Navigate to: **http://localhost:8090**
 
 ---
 
