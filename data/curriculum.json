@@ -1,0 +1,57 @@
+[
+  {
+    "id": "t1",
+    "topic": "Numbers 1–10",
+    "icon": "🔢",
+    "items": [
+      { "id": "t1i1", "hindi": "एक", "english": "One",   "santhali": "PLACEHOLDER – mit" },
+      { "id": "t1i2", "hindi": "दो",  "english": "Two",   "santhali": "PLACEHOLDER – bar" },
+      { "id": "t1i3", "hindi": "तीन", "english": "Three", "santhali": "PLACEHOLDER – pe" },
+      { "id": "t1i4", "hindi": "चार", "english": "Four",  "santhali": "PLACEHOLDER – pon" }
+    ]
+  },
+  {
+    "id": "t2",
+    "topic": "Greetings",
+    "icon": "👋",
+    "items": [
+      { "id": "t2i1", "hindi": "नमस्ते",       "english": "Hello / Greetings", "santhali": "PLACEHOLDER – Johar" },
+      { "id": "t2i2", "hindi": "धन्यवाद",      "english": "Thank you",          "santhali": "PLACEHOLDER – source before demo" },
+      { "id": "t2i3", "hindi": "कृपया",         "english": "Please",             "santhali": "PLACEHOLDER – source before demo" },
+      { "id": "t2i4", "hindi": "माफ़ कीजिए",    "english": "Sorry / Excuse me",  "santhali": "PLACEHOLDER – source before demo" }
+    ]
+  },
+  {
+    "id": "t3",
+    "topic": "Family Words",
+    "icon": "👨‍👩‍👧",
+    "items": [
+      { "id": "t3i1", "hindi": "माँ",    "english": "Mother", "santhali": "PLACEHOLDER – Ayo" },
+      { "id": "t3i2", "hindi": "पिताजी", "english": "Father", "santhali": "PLACEHOLDER – Baba" },
+      { "id": "t3i3", "hindi": "भाई",   "english": "Brother", "santhali": "PLACEHOLDER – source before demo" },
+      { "id": "t3i4", "hindi": "बहन",   "english": "Sister",  "santhali": "PLACEHOLDER – source before demo" }
+    ]
+  },
+  {
+    "id": "t4",
+    "topic": "Colors",
+    "icon": "🎨",
+    "items": [
+      { "id": "t4i1", "hindi": "लाल",   "english": "Red",    "santhali": "PLACEHOLDER – source before demo" },
+      { "id": "t4i2", "hindi": "हरा",   "english": "Green",  "santhali": "PLACEHOLDER – source before demo" },
+      { "id": "t4i3", "hindi": "नीला",  "english": "Blue",   "santhali": "PLACEHOLDER – source before demo" },
+      { "id": "t4i4", "hindi": "पीला",  "english": "Yellow", "santhali": "PLACEHOLDER – source before demo" }
+    ]
+  },
+  {
+    "id": "t5",
+    "topic": "Body Parts",
+    "icon": "🫀",
+    "items": [
+      { "id": "t5i1", "hindi": "हाथ",  "english": "Hand", "santhali": "PLACEHOLDER – source before demo" },
+      { "id": "t5i2", "hindi": "आँख",  "english": "Eye",  "santhali": "PLACEHOLDER – source before demo" },
+      { "id": "t5i3", "hindi": "कान",  "english": "Ear",  "santhali": "PLACEHOLDER – source before demo" },
+      { "id": "t5i4", "hindi": "पाँव", "english": "Foot", "santhali": "PLACEHOLDER – source before demo" }
+    ]
+  }
+]

@@ -1,0 +1,107 @@
+[
+  {
+    "id": "p1",
+    "hindi": "अपनी किताब खोलो",
+    "english": "Open your book",
+    "santhali": "PLACEHOLDER – source and fill before demo",
+    "status": "pending_verification"
+  },
+  {
+    "id": "p2",
+    "hindi": "बैठ जाओ",
+    "english": "Sit down",
+    "santhali": "PLACEHOLDER – source and fill before demo",
+    "status": "pending_verification"
+  },
+  {
+    "id": "p3",
+    "hindi": "खड़े हो जाओ",
+    "english": "Stand up",
+    "santhali": "PLACEHOLDER – source and fill before demo",
+    "status": "pending_verification"
+  },
+  {
+    "id": "p4",
+    "hindi": "ध्यान से सुनो",
+    "english": "Listen carefully",
+    "santhali": "PLACEHOLDER – source and fill before demo",
+    "status": "pending_verification"
+  },
+  {
+    "id": "p5",
+    "hindi": "मेरे बाद दोहराओ",
+    "english": "Repeat after me",
+    "santhali": "PLACEHOLDER – source and fill before demo",
+    "status": "pending_verification"
+  },
+  {
+    "id": "p6",
+    "hindi": "संख्याएँ गिनो",
+    "english": "Count the numbers",
+    "santhali": "PLACEHOLDER – source and fill before demo",
+    "status": "pending_verification"
+  },
+  {
+    "id": "p7",
+    "hindi": "हाथ उठाओ",
+    "english": "Raise your hand",
+    "santhali": "PLACEHOLDER – source and fill before demo",
+    "status": "pending_verification"
+  },
+  {
+    "id": "p8",
+    "hindi": "शाबाश",
+    "english": "Good job",
+    "santhali": "PLACEHOLDER – source and fill before demo",
+    "status": "pending_verification"
+  },
+  {
+    "id": "p9",
+    "hindi": "चुप रहो",
+    "english": "Be quiet",
+    "santhali": "PLACEHOLDER – source and fill before demo",
+    "status": "pending_verification"
+  },
+  {
+    "id": "p10",
+    "hindi": "कतार में खड़े हो जाओ",
+    "english": "Line up",
+    "santhali": "PLACEHOLDER – source and fill before demo",
+    "status": "pending_verification"
+  },
+  {
+    "id": "p11",
+    "hindi": "अपना नाम लिखो",
+    "english": "Write your name",
+    "santhali": "PLACEHOLDER – source and fill before demo",
+    "status": "pending_verification"
+  },
+  {
+    "id": "p12",
+    "hindi": "बोर्ड की ओर देखो",
+    "english": "Look at the board",
+    "santhali": "PLACEHOLDER – source and fill before demo",
+    "status": "pending_verification"
+  },
+  {
+    "id": "p13",
+    "hindi": "अपनी कॉपी निकालो",
+    "english": "Take out your notebook",
+    "santhali": "PLACEHOLDER – source and fill before demo",
+    "status": "pending_verification"
+  },
+  {
+    "id": "p14",
+    "hindi": "प्रश्न पूछो",
+    "english": "Ask a question",
+    "santhali": "PLACEHOLDER – source and fill before demo",
+    "status": "pending_verification"
+  },
+  {
+    "id": "p15",
+    "hindi": "कक्षा में आपका स्वागत है",
+    "english": "Welcome to class",
+    "santhali": "PLACEHOLDER – source and fill before demo",
+    "status": "pending_verification"
+  }
+]
