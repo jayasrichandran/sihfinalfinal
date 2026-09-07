@@ -4,10 +4,10 @@
     "topic": "Numbers 1–10",
     "icon": "🔢",
     "items": [
-      { "id": "t1i1", "hindi": "एक", "english": "One",   "santhali": "PLACEHOLDER – mit" },
-      { "id": "t1i2", "hindi": "दो",  "english": "Two",   "santhali": "PLACEHOLDER – bar" },
-      { "id": "t1i3", "hindi": "तीन", "english": "Three", "santhali": "PLACEHOLDER – pe" },
-      { "id": "t1i4", "hindi": "चार", "english": "Four",  "santhali": "PLACEHOLDER – pon" }
+      { "id": "t1i1", "hindi": "एक",  "english": "One",   "santhali": "ᱢᱤᱫ" },
+      { "id": "t1i2", "hindi": "दो",   "english": "Two",   "santhali": "ᱵᱟᱨ" },
+      { "id": "t1i3", "hindi": "तीन", "english": "Three", "santhali": "ᱯᱮ" },
+      { "id": "t1i4", "hindi": "चार",  "english": "Four",  "santhali": "ᱯᱳᱱ" }
     ]
   },
   {
@@ -15,10 +15,10 @@
     "topic": "Greetings",
     "icon": "👋",
     "items": [
-      { "id": "t2i1", "hindi": "नमस्ते",       "english": "Hello / Greetings", "santhali": "PLACEHOLDER – Johar" },
-      { "id": "t2i2", "hindi": "धन्यवाद",      "english": "Thank you",          "santhali": "PLACEHOLDER – source before demo" },
-      { "id": "t2i3", "hindi": "कृपया",         "english": "Please",             "santhali": "PLACEHOLDER – source before demo" },
-      { "id": "t2i4", "hindi": "माफ़ कीजिए",    "english": "Sorry / Excuse me",  "santhali": "PLACEHOLDER – source before demo" }
+      { "id": "t2i1", "hindi": "नमस्ते",     "english": "Hello / Greetings", "santhali": "ᱡᱚᱦᱟᱨ" },
+      { "id": "t2i2", "hindi": "धन्यवाद",    "english": "Thank you",          "santhali": "ᱥᱟᱨᱦᱟᱣ" },
+      { "id": "t2i3", "hindi": "कृपया",       "english": "Please",             "santhali": "ᱫᱟᱭᱟ ᱠᱟᱛᱮ" },
+      { "id": "t2i4", "hindi": "माफ़ कीजिए",  "english": "Sorry / Excuse me",  "santhali": "ᱤᱠᱟᱹ ᱠᱟᱧ ᱢᱮ" }
     ]
   },
   {
@@ -26,32 +26,114 @@
     "topic": "Family Words",
     "icon": "👨‍👩‍👧",
     "items": [
-      { "id": "t3i1", "hindi": "माँ",    "english": "Mother", "santhali": "PLACEHOLDER – Ayo" },
-      { "id": "t3i2", "hindi": "पिताजी", "english": "Father", "santhali": "PLACEHOLDER – Baba" },
-      { "id": "t3i3", "hindi": "भाई",   "english": "Brother", "santhali": "PLACEHOLDER – source before demo" },
-      { "id": "t3i4", "hindi": "बहन",   "english": "Sister",  "santhali": "PLACEHOLDER – source before demo" }
+      { "id": "t3i1", "hindi": "माँ",    "english": "Mother", "santhali": "ᱟᱭᱚ" },
+      { "id": "t3i2", "hindi": "पिताजी", "english": "Father", "santhali": "ᱵᱟᱵᱟ" },
+      { "id": "t3i3", "hindi": "भाई",   "english": "Brother", "santhali": "ᱵᱚᱭᱦᱟ" },
+      { "id": "t3i4", "hindi": "बहन",   "english": "Sister",  "santhali": "ᱵᱚᱠᱚᱧ ᱠᱩᱲᱤ" }
     ]
   },
   {
     "id": "t4",
     "topic": "Colors",
     "icon": "🎨",
+    "worksheetType": "colors",
+    "worksheetLevel": "First Standard",
     "items": [
-      { "id": "t4i1", "hindi": "लाल",   "english": "Red",    "santhali": "PLACEHOLDER – source before demo" },
-      { "id": "t4i2", "hindi": "हरा",   "english": "Green",  "santhali": "PLACEHOLDER – source before demo" },
-      { "id": "t4i3", "hindi": "नीला",  "english": "Blue",   "santhali": "PLACEHOLDER – source before demo" },
-      { "id": "t4i4", "hindi": "पीला",  "english": "Yellow", "santhali": "PLACEHOLDER – source before demo" }
+      { "id": "t4i1", "hindi": "लाल",  "english": "Red",    "santhali": "ᱟᱨᱟᱜ" },
+      { "id": "t4i2", "hindi": "हरा",  "english": "Green",  "santhali": "ᱦᱟᱹᱨᱤᱭᱟᱹᱲ" },
+      { "id": "t4i3", "hindi": "नीला", "english": "Blue",   "santhali": "ᱞᱤᱞ" },
+      { "id": "t4i4", "hindi": "पीला", "english": "Yellow", "santhali": "ᱥᱟᱥᱟᱝ" }
+    ],
+    "worksheetItems": [
+      { "id": "c1", "hindi": "लाल",  "santhali": "ᱟᱨᱟᱜ",     "color": "#e53935" },
+      { "id": "c2", "hindi": "हरा",  "santhali": "ᱦᱟᱹᱨᱤᱭᱟᱹᱲ", "color": "#43a047" },
+      { "id": "c3", "hindi": "नीला", "santhali": "ᱞᱤᱞ",      "color": "#1e88e5" },
+      { "id": "c4", "hindi": "पीला", "santhali": "ᱥᱟᱥᱟᱝ",    "color": "#fdd835" }
     ]
   },
   {
     "id": "t5",
     "topic": "Body Parts",
     "icon": "🫀",
+    "worksheetType": "body_parts",
+    "worksheetLevel": "First Standard",
     "items": [
-      { "id": "t5i1", "hindi": "हाथ",  "english": "Hand", "santhali": "PLACEHOLDER – source before demo" },
-      { "id": "t5i2", "hindi": "आँख",  "english": "Eye",  "santhali": "PLACEHOLDER – source before demo" },
-      { "id": "t5i3", "hindi": "कान",  "english": "Ear",  "santhali": "PLACEHOLDER – source before demo" },
-      { "id": "t5i4", "hindi": "पाँव", "english": "Foot", "santhali": "PLACEHOLDER – source before demo" }
+      { "id": "t5i1", "hindi": "हाथ",  "english": "Hand", "santhali": "ᱛᱤ" },
+      { "id": "t5i2", "hindi": "आँख",  "english": "Eye",  "santhali": "ᱢᱮᱫ" },
+      { "id": "t5i3", "hindi": "कान",  "english": "Ear",  "santhali": "ᱞᱩᱛᱩᱨ" },
+      { "id": "t5i4", "hindi": "पाँव", "english": "Foot", "santhali": "ᱡᱟᱝᱜᱟ" }
+    ],
+    "worksheetItems": [
+      { "id": "b1", "hindi": "हाथ",  "santhali": "ᱛᱤ",    "part": "hand" },
+      { "id": "b2", "hindi": "आँख",  "santhali": "ᱢᱮᱫ",   "part": "eye" },
+      { "id": "b3", "hindi": "कान",  "santhali": "ᱞᱩᱛᱩᱨ", "part": "ear" },
+      { "id": "b4", "hindi": "पाँव", "santhali": "ᱡᱟᱝᱜᱟ", "part": "foot" }
+    ]
+  },
+  {
+    "id": "math_counting",
+    "topic": "Class 1 — Counting with Pictures",
+    "icon": "🧮",
+    "worksheetType": "counting",
+    "worksheetLevel": "First Standard",
+    "items": [
+      { "id": "mc1", "hindi": "3 वस्तुएँ", "english": "Count 3 objects", "santhali": "ᱯᱮ",   "answer": 3 },
+      { "id": "mc2", "hindi": "5 वस्तुएँ", "english": "Count 5 objects", "santhali": "ᱢᱚᱬᱮ", "answer": 5 },
+      { "id": "mc3", "hindi": "7 वस्तुएँ", "english": "Count 7 objects", "santhali": "ᱮᱭᱟᱭ", "answer": 7 }
+    ]
+  },
+  {
+    "id": "math_addition",
+    "topic": "Class 1 — Easy Addition",
+    "icon": "➕",
+    "worksheetType": "addition",
+    "worksheetLevel": "First Standard",
+    "items": [
+      { "id": "ma1", "hindi": "1 + 1", "english": "One plus one", "santhali": "᱑ + ᱑", "answer": 2, "a": 1, "b": 1 },
+      { "id": "ma2", "hindi": "2 + 1", "english": "Two plus one", "santhali": "᱒ + ᱑", "answer": 3, "a": 2, "b": 1 },
+      { "id": "ma3", "hindi": "2 + 2", "english": "Two plus two",  "santhali": "᱒ + ᱒", "answer": 4, "a": 2, "b": 2 }
+    ]
+  },
+  {
+    "id": "math_subtraction",
+    "topic": "Class 1 — Easy Subtraction",
+    "icon": "➖",
+    "worksheetType": "subtraction",
+    "worksheetLevel": "First Standard",
+    "items": [
+      { "id": "ms1", "hindi": "2 − 1", "english": "Two minus one",  "santhali": "᱒ − ᱑", "answer": 1, "a": 2, "b": 1 },
+      { "id": "ms2", "hindi": "4 − 1", "english": "Four minus one", "santhali": "᱔ − ᱑", "answer": 3, "a": 4, "b": 1 },
+      { "id": "ms3", "hindi": "5 − 2", "english": "Five minus two",  "santhali": "᱕ − ᱒", "answer": 3, "a": 5, "b": 2 }
+    ]
+  },
+  {
+    "id": "math_spelling",
+    "topic": "Class 1 — Number Spelling 1–20",
+    "icon": "🔤",
+    "worksheetType": "number_spelling",
+    "worksheetLevel": "First Standard",
+    "items": [],
+    "numberSpelling": [
+      { "number": 1,  "olchikiNumber": "᱑",  "hindi": "एक",     "santhali": "ᱢᱤᱫ",       "status": "pending_verification" },
+      { "number": 2,  "olchikiNumber": "᱒",  "hindi": "दो",      "santhali": "ᱵᱟᱨ",       "status": "pending_verification" },
+      { "number": 3,  "olchikiNumber": "᱓",  "hindi": "तीन",     "santhali": "ᱯᱮ",       "status": "pending_verification" },
+      { "number": 4,  "olchikiNumber": "᱔",  "hindi": "चार",     "santhali": "ᱯᱳᱱ",       "status": "pending_verification" },
+      { "number": 5,  "olchikiNumber": "᱕",  "hindi": "पाँच",    "santhali": "ᱢᱚᱬᱮ",      "status": "pending_verification" },
+      { "number": 6,  "olchikiNumber": "᱖",  "hindi": "छह",      "santhali": "ᱛᱩᱨᱩᱭ",     "status": "pending_verification" },
+      { "number": 7,  "olchikiNumber": "᱗",  "hindi": "सात",     "santhali": "ᱮᱭᱟᱭ",      "status": "pending_verification" },
+      { "number": 8,  "olchikiNumber": "᱘",  "hindi": "आठ",      "santhali": "ᱤᱨᱟᱹᱞ",     "status": "pending_verification" },
+      { "number": 9,  "olchikiNumber": "᱙",  "hindi": "नौ",      "santhali": "ᱟᱨᱮ",       "status": "pending_verification" },
+      { "number": 10, "olchikiNumber": "᱑᱐", "hindi": "दस",      "santhali": "ᱜᱮᱞ",       "status": "pending_verification" },
+      { "number": 11, "olchikiNumber": "᱑᱑", "hindi": "ग्यारह",  "santhali": "ᱜᱮᱞ ᱢᱤᱫ",   "status": "pending_verification" },
+      { "number": 12, "olchikiNumber": "᱑᱒", "hindi": "बारह",    "santhali": "ᱜᱮᱞ ᱵᱟᱨ",   "status": "pending_verification" },
+      { "number": 13, "olchikiNumber": "᱑᱓", "hindi": "तेरह",    "santhali": "ᱜᱮᱞ ᱯᱮ",   "status": "pending_verification" },
+      { "number": 14, "olchikiNumber": "᱑᱔", "hindi": "चौदह",    "santhali": "ᱜᱮᱞ ᱯᱳᱱ",   "status": "pending_verification" },
+      { "number": 15, "olchikiNumber": "᱑᱕", "hindi": "पंद्रह",  "santhali": "ᱜᱮᱞ ᱢᱚᱬᱮ",  "status": "pending_verification" },
+      { "number": 16, "olchikiNumber": "᱑᱖", "hindi": "सोलह",    "santhali": "ᱜᱮᱞ ᱛᱩᱨᱩᱭ", "status": "pending_verification" },
+      { "number": 17, "olchikiNumber": "᱑᱗", "hindi": "सत्रह",   "santhali": "ᱜᱮᱞ ᱮᱭᱟᱭ",  "status": "pending_verification" },
+      { "number": 18, "olchikiNumber": "᱑᱘", "hindi": "अठारह",  "santhali": "ᱜᱮᱞ ᱤᱨᱟᱹᱞ", "status": "pending_verification" },
+      { "number": 19, "olchikiNumber": "᱑᱙", "hindi": "उन्नीस",  "santhali": "ᱜᱮᱞ ᱟᱨᱮ",   "status": "pending_verification" },
+      { "number": 20, "olchikiNumber": "᱒᱐", "hindi": "बीस",     "santhali": "ᱤᱥᱤ",       "status": "pending_verification" }
     ]
   }
 ]

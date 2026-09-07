@@ -191,37 +191,118 @@ async function initCurriculum() {
   renderCurriculum();
 }
 
+/* ============================================================
+   SAFETY / DISPLAY / SVG HELPERS
+   ============================================================ */
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function escapeJs(value) {
+  return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+function toOlChikiNumber(value) {
+  const d = ['᱐','᱑','᱒','᱓','᱔','᱕','᱖','᱗','᱘','᱙'];
+  return String(value).split('').map(c => d[Number(c)] ?? c).join('');
+}
+
+/* Inline SVG objects: zero external dependencies, 100% offline printable */
+function makeObjectSvg(index) {
+  const type = index % 3;
+  if (type === 0) {
+    return `
+      <svg class="ws-object-svg" viewBox="0 0 60 60" role="img" aria-label="object">
+        <circle cx="30" cy="33" r="18" fill="none" stroke="currentColor" stroke-width="3"/>
+        <path d="M30 15 C28 8 34 5 40 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+        <path d="M39 8 C45 5 49 10 46 14 C42 16 39 13 39 8Z" fill="none" stroke="currentColor" stroke-width="2.5"/>
+      </svg>`;
+  }
+  if (type === 1) {
+    return `
+      <svg class="ws-object-svg" viewBox="0 0 60 60" role="img" aria-label="object">
+        <rect x="12" y="15" width="36" height="30" rx="5" fill="none" stroke="currentColor" stroke-width="3"/>
+        <path d="M12 25 H48" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M20 15 V45 M40 15 V45" fill="none" stroke="currentColor" stroke-width="2"/>
+      </svg>`;
+  }
+  return `
+    <svg class="ws-object-svg" viewBox="0 0 60 60" role="img" aria-label="object">
+      <circle cx="30" cy="30" r="20" fill="none" stroke="currentColor" stroke-width="3"/>
+      <path d="M30 10 L34 25 L50 25 L37 34 L42 49 L30 40 L18 49 L23 34 L10 25 L26 25 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+    </svg>`;
+}
+
+function makeBodyPartSvg(part) {
+  const hi = '#8B2635', normal = '#bdbdbd', stroke = '#333';
+  const hand = part === 'hand', eye = part === 'eye', ear = part === 'ear', foot = part === 'foot';
+  return `<svg class="ws-body-svg" viewBox="0 0 260 300" role="img" aria-label="body part picture">
+    <circle cx="130" cy="48" r="30" fill="${normal}" stroke="${stroke}" stroke-width="3"/>
+    <path d="M98 78 Q130 70 162 78 L174 150 L160 205 L100 205 L86 150 Z" fill="${normal}" stroke="${stroke}" stroke-width="3"/>
+    <path d="M98 92 L60 155 L48 195" fill="none" stroke="${hand ? hi : normal}" stroke-width="18" stroke-linecap="round"/>
+    <path d="M162 92 L200 155 L212 195" fill="none" stroke="${hand ? hi : normal}" stroke-width="18" stroke-linecap="round"/>
+    <circle cx="48" cy="198" r="15" fill="${hand ? hi : normal}" stroke="${stroke}" stroke-width="3"/>
+    <circle cx="212" cy="198" r="15" fill="${hand ? hi : normal}" stroke="${stroke}" stroke-width="3"/>
+    <path d="M112 205 L105 265" stroke="${foot ? hi : normal}" stroke-width="22" stroke-linecap="round"/>
+    <path d="M148 205 L155 265" stroke="${foot ? hi : normal}" stroke-width="22" stroke-linecap="round"/>
+    <ellipse cx="102" cy="276" rx="25" ry="10" fill="${foot ? hi : normal}" stroke="${stroke}" stroke-width="3"/>
+    <ellipse cx="158" cy="276" rx="25" ry="10" fill="${foot ? hi : normal}" stroke="${stroke}" stroke-width="3"/>
+    <ellipse cx="100" cy="48" rx="7" ry="10" fill="${eye ? hi : '#444'}"/>
+    <ellipse cx="160" cy="48" rx="7" ry="10" fill="${eye ? hi : '#444'}"/>
+    <ellipse cx="88" cy="48" rx="10" ry="18" fill="${ear ? hi : normal}" stroke="${stroke}" stroke-width="3"/>
+    <ellipse cx="172" cy="48" rx="10" ry="18" fill="${ear ? hi : normal}" stroke="${stroke}" stroke-width="3"/>
+    <path d="M130 50 L124 64 L136 64" fill="none" stroke="${stroke}" stroke-width="3"/>
+  </svg>`;
+}
+
 function renderCurriculum() {
   const container = document.getElementById('curriculum-list');
   const scores    = JSON.parse(localStorage.getItem(SCORES_KEY) || '{}');
 
   container.innerHTML = allCurriculum.map(topic => {
-    const sc  = scores[topic.id] || { correct: 0, attempts: 0 };
-    const pct = sc.attempts > 0 ? Math.round((sc.correct / sc.attempts) * 100) : null;
+    const sc     = scores[topic.id] || { correct: 0, attempts: 0 };
+    const pct    = sc.attempts > 0 ? Math.round((sc.correct / sc.attempts) * 100) : null;
+    const isMath = Boolean(topic.worksheetType);
+
+    const displayItems = topic.worksheetType === 'number_spelling'
+      ? (topic.numberSpelling || []).map((item, index) => ({
+          id: `ns${item.number ?? index + 1}`,
+          hindi: item.hindi,
+          santhali: item.santhali,
+          number: item.number,
+          olchikiNumber: item.olchikiNumber
+        }))
+      : (topic.items || []);
 
     return `
-      <div class="topic-card" id="topic-${topic.id}">
-        <div class="topic-header" onclick="toggleTopic('${topic.id}')">
-          <span class="topic-icon">${topic.icon}</span>
-          <span class="topic-title">${topic.topic}</span>
+      <div class="topic-card" id="topic-${escapeHtml(topic.id)}">
+        <div class="topic-header" onclick="toggleTopic('${escapeJs(topic.id)}')">
+          <span class="topic-icon">${topic.icon || '📘'}</span>
+          <span class="topic-title">${escapeHtml(topic.topic)}</span>
+          ${isMath ? '<span class="topic-progress">Class 1 FLN</span>' : ''}
           ${pct !== null ? `<span class="topic-progress">${sc.correct}/${sc.attempts} correct (${pct}%)</span>` : ''}
           <span class="topic-chevron">▾</span>
         </div>
         <div class="topic-body">
           <div class="flashcard-grid">
-            ${topic.items.map(item => `
-              <div class="flashcard" id="fc-${item.id}">
-                <span class="fc-hindi">${item.hindi}</span>
-                <span class="fc-english">${item.english}</span>
-                <span class="fc-santhali">${item.santhali}</span>
+            ${displayItems.map(item => `
+              <div class="flashcard" id="fc-${escapeHtml(item.id)}">
+                <span class="fc-hindi">${escapeHtml(item.hindi || '')}</span>
+                ${item.english ? `<span class="fc-english">${escapeHtml(item.english)}</span>` : ''}
+                <span class="fc-santhali">${escapeHtml(item.santhali || '')}</span>
                 <button class="btn btn-outline" style="font-size:0.72rem;padding:0.35rem 0.75rem;"
-                  onclick="showQuiz('${topic.id}','${item.id}')">
+                  onclick="showQuiz('${escapeJs(topic.id)}','${escapeJs(item.id)}')">
                   🎯 Practice
                 </button>
               </div>
             `).join('')}
           </div>
-          <div id="quiz-area-${topic.id}" style="display:none;"></div>
+          <div id="quiz-area-${escapeHtml(topic.id)}" style="display:none;"></div>
         </div>
       </div>`;
   }).join('');
@@ -229,91 +310,189 @@ function renderCurriculum() {
 
 function toggleTopic(topicId) {
   const card = document.getElementById(`topic-${topicId}`);
-  card.classList.toggle('expanded');
+  if (card) card.classList.toggle('expanded');
 }
 
 function showQuiz(topicId, itemId) {
-  const topic  = allCurriculum.find(t => t.id === topicId);
-  const item   = topic.items.find(i => i.id === itemId);
+  const topic = allCurriculum.find(t => t.id === topicId);
+  if (!topic) return;
+
+  const item = topic.worksheetType === 'number_spelling'
+    ? (topic.numberSpelling || []).find((entry, index) => `ns${entry.number ?? index + 1}` === itemId)
+    : (topic.items || []).find(i => i.id === itemId);
   const quizEl = document.getElementById(`quiz-area-${topicId}`);
+  if (!item || !quizEl) return;
 
-  // Build 4 options: correct + 3 distractors from other items in topic
-  const correctAnswer = item.santhali;
-  const distractors   = topic.items
-    .filter(i => i.id !== itemId)
-    .map(i => i.santhali);
+  let questionText = '';
+  let correctAnswer = '';
+  let correctDisplay = '';
+  let optionLabels = [];
+  let distractors = [];
 
-  // Pad with generic distractors if needed
-  const genericDistractors = ['PLACEHOLDER – A', 'PLACEHOLDER – B', 'PLACEHOLDER – C'];
-  while (distractors.length < 3) {
-    distractors.push(genericDistractors[distractors.length]);
+  if (topic.worksheetType === 'colors' || topic.worksheetType === 'body_parts') {
+    const worksheetItems = topic.worksheetItems || [];
+    const itemIndex = (topic.items || []).findIndex(i => i.id === itemId);
+    const practiceItem = worksheetItems[itemIndex >= 0 ? itemIndex : 0];
+    if (!practiceItem) return;
+
+    correctAnswer = practiceItem.santhali;
+    correctDisplay = `${practiceItem.hindi} / ${practiceItem.santhali}`;
+    const pool = worksheetItems.filter((_, idx) => idx !== (itemIndex >= 0 ? itemIndex : 0));
+
+    if (topic.worksheetType === 'colors') {
+      questionText = `
+        <div><strong>चित्र का रंग पहचानिए:</strong></div>
+        <div class="quiz-santhali">ᱪᱤᱛᱟᱹᱨ ᱨᱮᱭᱟᱜ ᱨᱚᱝ ᱧᱮᱞ ᱠᱟᱛᱮ ᱧᱩᱛᱩᱢ ᱚᱞ ᱢᱮ:</div>
+        <div class="quiz-picture-swatch" style="background:${escapeHtml(practiceItem.color)};"></div>`;
+    } else {
+      questionText = `
+        <div><strong>चित्र में शरीर के अंग का नाम पहचानिए:</strong></div>
+        <div class="quiz-santhali">ᱪᱤᱛᱟᱹᱨ ᱨᱮ ᱦᱚᱲᱢᱚ ᱵᱷᱟᱜ ᱨᱮᱭᱟᱜ ᱧᱩᱛᱩᱢ ᱧᱮᱞ ᱢᱮ:</div>
+        <div class="quiz-body-picture">${makeBodyPartSvg(practiceItem.part)}</div>`;
+    }
+
+    optionLabels = shuffle([practiceItem, ...pool.slice(0, 3)]).map(x => ({
+      value: x.santhali,
+      label: `${x.hindi} / ${x.santhali}`
+    }));
+  } else if (topic.worksheetType === 'number_spelling') {
+    correctAnswer = item.santhali;
+    correctDisplay = `${item.hindi} / ${item.santhali}`;
+    questionText = `
+      <div><strong>संख्या ${escapeHtml(item.number)} का नाम चुनिए:</strong></div>
+      <div class="quiz-santhali">ᱮᱞ ${escapeHtml(item.olchikiNumber || item.number)} ᱨᱮᱭᱟᱜ ᱧᱩᱛᱩᱢ ᱵᱟᱪᱷᱱᱟᱣ ᱢᱮ:</div>`;
+
+    const pool = (topic.numberSpelling || []).filter(x => x.number !== item.number);
+    optionLabels = shuffle([item, ...pool.slice(0, 3)]).map(x => ({
+      value: x.santhali,
+      label: `${x.hindi} / ${x.santhali}`
+    }));
+  } else if (topic.worksheetType === 'addition' || topic.worksheetType === 'subtraction') {
+    correctAnswer = String(item.answer);
+    correctDisplay = `${item.answer} / ${toOlChikiNumber(item.answer)}`;
+    const operator = topic.worksheetType === 'addition' ? '+' : '−';
+    questionText = topic.worksheetType === 'addition'
+      ? `<div><strong>जोड़कर सही उत्तर चुनिए: ${item.hindi} = ?</strong></div><div class="quiz-santhali">ᱡᱚᱲ ᱠᱟᱛᱮ ᱴᱷᱤᱠ ᱡᱚᱵᱟᱵ ᱵᱟᱪᱷᱱᱟᱣ ᱢᱮ: ${item.a ?? ''} ${operator} ${item.b ?? ''} = ?</div>`
+      : `<div><strong>घटाकर सही उत्तर चुनिए: ${item.hindi} = ?</strong></div><div class="quiz-santhali">ᱠᱟᱹᱴ ᱠᱟᱛᱮ ᱴᱷᱤᱠ ᱡᱚᱵᱟᱵ ᱵᱟᱪᱷᱱᱟᱣ ᱢᱮ: ${item.a ?? ''} ${operator} ${item.b ?? ''} = ?</div>`;
+    distractors = (topic.items || [])
+      .filter(i => i.id !== itemId)
+      .map(i => String(i.answer))
+      .filter(Boolean);
+  } else if (topic.worksheetType === 'counting') {
+    correctAnswer = String(item.answer);
+    correctDisplay = `${item.answer} / ${toOlChikiNumber(item.answer)}`;
+    questionText = `
+      <div><strong>चित्रों को गिनकर सही संख्या चुनिए:</strong></div>
+      <div class="quiz-santhali">ᱪᱤᱛᱟᱹᱨ ᱠᱚ ᱮᱞ ᱠᱟᱛᱮ ᱴᱷᱤᱠ ᱮᱞ ᱵᱟᱪᱷᱱᱟᱣ ᱢᱮ:</div>
+      <div class="ws-counting-objects quiz-counting-preview">${Array.from({length:Number(item.answer)},(_,i)=>makeObjectSvg(i)).join('')}</div>`;
+    distractors = (topic.items || [])
+      .filter(i => i.id !== itemId)
+      .map(i => String(i.answer))
+      .filter(Boolean);
+  } else {
+    // Regular language topics (Numbers, Greetings, Family Words, etc.)
+    correctAnswer = item.santhali || '';
+    correctDisplay = `${item.hindi || ''} / ${item.santhali || ''}`;
+    questionText = `
+      <div><strong>हिन्दी शब्द <span class="quiz-highlight">${escapeHtml(item.hindi)}</span> का सही संताली शब्द चुनिए:</strong></div>
+      <div class="quiz-santhali">ᱦᱤᱱᱫᱤ ᱥᱟᱵᱫ <span class="quiz-highlight">${escapeHtml(item.hindi)}</span> ᱨᱮᱭᱟᱜ ᱴᱷᱤᱠ ᱥᱟᱱᱛᱟᱲᱤ ᱥᱟᱵᱫ ᱵᱟᱪᱷᱱᱟᱣ ᱢᱮ:</div>`;
+    distractors = (topic.items || [])
+      .filter(i => i.id !== itemId)
+      .map(i => i.santhali)
+      .filter(Boolean)
+      .filter(v => !String(v).toLowerCase().includes('placeholder'));
+    optionLabels = shuffle([item, ...(topic.items || [])
+      .filter(i => i.id !== itemId)
+      .filter(i => i.santhali && !String(i.santhali).toLowerCase().includes('placeholder'))
+      .slice(0, 3)]).map(x => ({
+        value: x.santhali,
+        label: `${x.hindi} / ${x.santhali}`
+      }));
   }
-  const wrongOptions = distractors.slice(0, 3);
 
-  const allOptions = shuffle([correctAnswer, ...wrongOptions]);
+  // Math/counting questions use bilingual numeral options.
+  if (!optionLabels.length) {
+    const generic = ['1','2','3','4','5','6','7','8','9','10'];
+    for (const g of generic) {
+      if (distractors.length >= 3) break;
+      if (g !== String(correctAnswer) && !distractors.includes(g)) distractors.push(g);
+    }
+    optionLabels = shuffle([String(correctAnswer), ...distractors.slice(0, 3)])
+      .map(v => ({ value: String(v), label: `${v} / ${toOlChikiNumber(v)}` }));
+  }
 
   quizEl.style.display = 'block';
   quizEl.innerHTML = `
-    <div class="quiz-area" id="quiz-inner-${itemId}">
-      <div class="quiz-question">
-        What is the Santhali for <strong>${item.hindi}</strong> (${item.english})?
-      </div>
+    <div class="quiz-area" id="quiz-inner-${escapeHtml(itemId)}" data-correct="${escapeHtml(String(correctAnswer))}">
+      <div class="quiz-question">${questionText}</div>
       <div class="quiz-options">
-        ${allOptions.map((opt, idx) => `
-          <div class="quiz-option"
-               id="qopt-${itemId}-${idx}"
-               onclick="checkAnswer('${topicId}','${itemId}',${JSON.stringify(opt)},${JSON.stringify(correctAnswer)},${idx})">
-            ${opt}
-          </div>
+        ${optionLabels.map((opt, idx) => `
+          <button type="button" class="quiz-option"
+                  id="qopt-${escapeHtml(itemId)}-${idx}"
+                  data-value="${escapeHtml(String(opt.value))}"
+                  aria-label="${escapeHtml(opt.label)}">
+            ${escapeHtml(opt.label)}
+          </button>
         `).join('')}
       </div>
-      <div class="quiz-feedback" id="quiz-fb-${itemId}"></div>
+      <div class="quiz-feedback" id="quiz-fb-${escapeHtml(itemId)}" aria-live="polite"></div>
     </div>
   `;
+
+  const quizInner = document.getElementById(`quiz-inner-${itemId}`);
+  if (quizInner) {
+    quizInner.querySelectorAll('.quiz-option').forEach((button, idx) => {
+      button.addEventListener('click', () => {
+        checkAnswer(topicId, itemId, button.dataset.value, correctAnswer, idx, correctDisplay);
+      });
+    });
+  }
 
   quizEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function checkAnswer(topicId, itemId, chosen, correct, idx) {
-  // Disable all options
-  document.querySelectorAll(`[id^="qopt-${itemId}-"]`).forEach(el => {
-    el.style.pointerEvents = 'none';
+function checkAnswer(topicId, itemId, chosen, correct, idx, correctDisplay) {
+  const options  = Array.from(document.querySelectorAll(`[id^="qopt-${itemId}-"]`));
+  const chosenEl = document.getElementById(`qopt-${itemId}-${idx}`);
+  const fbEl     = document.getElementById(`quiz-fb-${itemId}`);
+
+  if (!chosenEl || !fbEl || !options.length) return;
+
+  options.forEach(el => {
+    el.disabled = true;
+    el.classList.remove('correct', 'wrong');
   });
 
-  const isCorrect = chosen === correct;
-  const chosenEl  = document.getElementById(`qopt-${itemId}-${idx}`);
-  const fbEl      = document.getElementById(`quiz-fb-${itemId}`);
+  const isCorrect = String(chosen).trim() === String(correct).trim();
 
-  // Mark all correct options green
-  document.querySelectorAll(`[id^="qopt-${itemId}-"]`).forEach(el => {
-    if (el.textContent.trim() === correct) el.classList.add('correct');
+  options.forEach(el => {
+    if (String(el.dataset.value).trim() === String(correct).trim()) {
+      el.classList.add('correct');
+    }
   });
 
-  if (!isCorrect) {
-    chosenEl.classList.remove('correct');
-    chosenEl.classList.add('wrong');
-    fbEl.textContent = '✗ Not quite — the correct answer is highlighted above.';
-    fbEl.className   = 'quiz-feedback wrong';
+  if (isCorrect) {
+    fbEl.innerHTML = '✓ <strong>सही उत्तर / ᱴᱷᱤᱠ ᱡᱚᱵᱟᱵ</strong>';
+    fbEl.className = 'quiz-feedback correct';
   } else {
-    fbEl.textContent = '✓ Correct!';
-    fbEl.className   = 'quiz-feedback correct';
+    chosenEl.classList.add('wrong');
+    fbEl.innerHTML = '✗ <strong>गलत उत्तर / ᱵᱟᱝ ᱴᱷᱤᱠ</strong><br><span>सही उत्तर / ᱴᱷᱤᱠ ᱡᱚᱵᱟᱵ: <strong>' + escapeHtml(String(correctDisplay || correct)) + '</strong></span>';
+    fbEl.className = 'quiz-feedback wrong';
   }
 
-  // Persist score
+  // Persist score in localStorage (master functionality preserved)
   const scores = JSON.parse(localStorage.getItem(SCORES_KEY) || '{}');
   if (!scores[topicId]) scores[topicId] = { correct: 0, attempts: 0 };
   scores[topicId].attempts++;
   if (isCorrect) scores[topicId].correct++;
   localStorage.setItem(SCORES_KEY, JSON.stringify(scores));
 
-  // Refresh progress label
   renderCurriculumProgressLabel(topicId, scores[topicId]);
 }
 
 function renderCurriculumProgressLabel(topicId, sc) {
   const header = document.querySelector(`#topic-${topicId} .topic-progress`);
   if (!header) {
-    // Insert a new progress element
     const titleEl = document.querySelector(`#topic-${topicId} .topic-title`);
     if (titleEl) {
       const span = document.createElement('span');
@@ -343,10 +522,10 @@ function shuffle(arr) {
 async function initWorksheet() {
   const topicSelect = document.getElementById('ws-topic');
   const countInput  = document.getElementById('ws-count');
+  const langSelect  = document.getElementById('ws-language');
   const genBtn      = document.getElementById('ws-generate-btn');
   const printBtn    = document.getElementById('ws-print-btn');
 
-  // Wait until curriculum is loaded
   if (!allCurriculum.length) {
     try {
       const res  = await fetch('./data/curriculum.json');
@@ -354,13 +533,31 @@ async function initWorksheet() {
     } catch (e) { return; }
   }
 
-  const topicOptions = allCurriculum.map(t =>
-    `<option value="${t.id}">${t.icon} ${t.topic}</option>`
-  );
-  if (allFlashcards && allFlashcards.length) {
-    topicOptions.push('<option value="fc-numbers-1-20">🔢 Numbers 1–20 (Class 1 Mathematics)</option>');
+  // Populate options: First Standard FLN Math/Visual topics first, then standard vocabulary topics
+  const mathTopics     = allCurriculum.filter(t => t.worksheetType);
+  const standardTopics = allCurriculum.filter(t => !t.worksheetType);
+
+  let topicOptionsHtml = '';
+  if (mathTopics.length) {
+    topicOptionsHtml += `<optgroup label="First Standard (FLN Mathematics & Visuals)">`;
+    topicOptionsHtml += mathTopics.map(t => `<option value="${escapeHtml(t.id)}">${t.icon || '📘'} ${escapeHtml(t.topic)}</option>`).join('');
+    topicOptionsHtml += `</optgroup>`;
   }
-  topicSelect.innerHTML = topicOptions.join('');
+  if (standardTopics.length) {
+    topicOptionsHtml += `<optgroup label="Curriculum Vocabulary Topics">`;
+    topicOptionsHtml += standardTopics.map(t => `<option value="${escapeHtml(t.id)}">${t.icon || '📘'} ${escapeHtml(t.topic)}</option>`).join('');
+    topicOptionsHtml += `</optgroup>`;
+  }
+  if (allFlashcards && allFlashcards.length) {
+    topicOptionsHtml += `<optgroup label="Flashcard Modules">`;
+    topicOptionsHtml += `<option value="fc-numbers-1-20">🔢 Numbers 1–20 (Class 1 Mathematics)</option>`;
+    topicOptionsHtml += `</optgroup>`;
+  }
+
+  topicSelect.innerHTML = topicOptionsHtml;
+
+  if (langSelect) langSelect.value = 'bilingual';
+  countInput.value = Math.min(10, Math.max(3, parseInt(countInput.value, 10) || 5));
 
   genBtn.addEventListener('click', generateWorksheet);
   printBtn.addEventListener('click', () => window.print());
@@ -372,29 +569,110 @@ function generateWorksheet() {
   let topic      = allCurriculum.find(t => t.id === topicId);
   const output   = document.getElementById('worksheet-output');
   const printBtn = document.getElementById('ws-print-btn');
+  const today    = new Date().toLocaleDateString('en-IN', { year:'numeric', month:'long', day:'numeric' });
 
-  let pool;
+  // Mode A: Flashcards Numbers 1-20 (master original preserved)
   if (topicId === 'fc-numbers-1-20') {
     topic = {
       id: 'fc-numbers-1-20',
       topic: 'Numbers 1–20 (Class 1 Mathematics)',
       icon: '🔢'
     };
-    pool = allFlashcards
+    const pool = allFlashcards
       .filter(fc => fc.category === 'numbers' || fc.number !== undefined)
       .map(fc => ({
         hindi: `${fc.hindi} (${fc.number})`,
         english: `Number ${fc.number}`,
         santhali: `${fc.olChiki}`
       }));
-  } else {
-    if (!topic) return;
-    pool = topic.items;
+
+    const questions = [];
+    for (let i = 0; i < count; i++) {
+      const item = pool[i % pool.length];
+      const type = i % 2 === 0 ? 'fill' : 'match';
+      questions.push({ item, type });
+    }
+
+    const qHtml = questions.map((q, i) => {
+      if (q.type === 'fill') {
+        return `<div class="ws-question">
+          <span class="ws-q-num">${i + 1}.</span>
+          <span>The Santhali word for <strong>${q.item.hindi}</strong> (${q.item.english}) is
+            <span class="ws-blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>.
+          </span>
+        </div>`;
+      } else {
+        return `<div class="ws-question">
+          <span class="ws-q-num">${i + 1}.</span>
+          <span>Match: <strong>${q.item.hindi}</strong> (${q.item.english})
+            ↔ <span class="ws-blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            (write the Santhali translation)
+          </span>
+        </div>`;
+      }
+    }).join('');
+
+    const ansHtml = questions.map((q, i) => `
+      <div class="ws-answer">
+        <span class="ws-a-num">${i + 1}.</span>
+        <span>${q.item.santhali}</span>
+      </div>
+    `).join('');
+
+    output.className = '';
+    output.innerHTML = `
+      <div class="ws-header">
+        <h2>MaatriSetu AI — FLN Worksheet</h2>
+        <p>Topic: ${topic.icon} ${topic.topic} &nbsp;|&nbsp; Date: ${today} &nbsp;|&nbsp; Name: _______________________</p>
+      </div>
+      <div class="ws-questions">${qHtml}</div>
+      <hr class="ws-divider">
+      <div class="ws-answer-key">
+        <h3>Answer Key</h3>
+        ${ansHtml}
+      </div>
+      <p class="ws-caption">Generated from structured curriculum data — template-based generation, not AI-authored content.</p>
+    `;
+
+    output.style.display = 'block';
+    printBtn.style.display = 'inline-flex';
+    output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
   }
 
-  const today  = new Date().toLocaleDateString('en-IN', { year:'numeric', month:'long', day:'numeric' });
+  if (!topic) return;
 
-  // Build questions by cycling through items
+  // Mode B: First Standard FLN Visual / Math Worksheet (new unique feature)
+  if (topic.worksheetType) {
+    const questions = buildWorksheetQuestions(topic, count);
+    const qHtml = questions.map((q, i) => renderWorksheetQuestion(q, i)).join('');
+    const ansHtml = questions.map((q, i) => renderWorksheetAnswer(q, i)).join('');
+
+    output.className = 'worksheet-output-bilingual';
+    output.innerHTML = `
+      <div class="ws-header">
+        <h2>MaatriSetu AI — कक्षा 1 कार्यपत्रक / ᱯᱟᱹᱦᱤᱞ ᱥᱮᱱᱛᱟᱲᱤ ᱯᱟᱹᱦᱟᱣ</h2>
+        <p>हिन्दी + ᱥᱟᱱᱛᱟᱲᱤ &nbsp;|&nbsp; दिनांक / ᱢᱟᱦᱤᱛ: ${today} &nbsp;|&nbsp; नाम / ᱧᱩᱛᱩᱢ: _______________________</p>
+      </div>
+      <div class="ws-questions">${qHtml}</div>
+      <hr class="ws-divider">
+      <div class="ws-answer-key">
+        <h3>उत्तरमाला / ᱡᱚᱵᱟᱵ ᱠᱟᱹᱴ</h3>
+        ${ansHtml}
+      </div>
+      <p class="ws-caption">Generated from structured curriculum data — template-based generation, not AI-authored content.</p>
+    `;
+
+    output.style.display = 'block';
+    printBtn.style.display = 'inline-flex';
+    output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
+  // Mode C: Standard Curriculum Vocabulary Topic (master original preserved)
+  const pool = topic.items || [];
+  if (!pool.length) return;
+
   const questions = [];
   for (let i = 0; i < count; i++) {
     const item = pool[i % pool.length];
@@ -428,6 +706,7 @@ function generateWorksheet() {
     </div>
   `).join('');
 
+  output.className = '';
   output.innerHTML = `
     <div class="ws-header">
       <h2>MaatriSetu AI — FLN Worksheet</h2>
@@ -446,6 +725,99 @@ function generateWorksheet() {
   printBtn.style.display = 'inline-flex';
   output.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
+function buildWorksheetQuestions(topic, count) {
+  const type = topic.worksheetType;
+  const questions = [];
+
+  if (type === 'counting') {
+    const values = shuffle([1,2,3,4,5,6,7,8,9,10]);
+    for (let i = 0; i < count; i++) questions.push({ type, answer: values[i % values.length] });
+  }
+
+  if (type === 'addition') {
+    for (let i = 0; i < count; i++) {
+      const a = 1 + Math.floor(Math.random() * 5);
+      const b = 1 + Math.floor(Math.random() * (6 - a));
+      questions.push({ type, a, b, answer: a + b });
+    }
+  }
+
+  if (type === 'subtraction') {
+    for (let i = 0; i < count; i++) {
+      const a = 2 + Math.floor(Math.random() * 9);
+      const b = Math.floor(Math.random() * (a + 1));
+      questions.push({ type, a, b, answer: a - b });
+    }
+  }
+
+  if (type === 'number_spelling') {
+    shuffle(topic.numberSpelling || []).slice(0, count).forEach(item => questions.push({
+      type, number: item.number, hindi: item.hindi, santhali: item.santhali, olchikiNumber: item.olchikiNumber
+    }));
+  }
+
+  if (type === 'colors' || type === 'body_parts') {
+    const pool = shuffle(topic.worksheetItems || []);
+    for (let i = 0; i < count && pool.length; i++) {
+      const item = pool[i % pool.length];
+      questions.push({
+        type, hindi: item.hindi, santhali: item.santhali, color: item.color, part: item.part
+      });
+    }
+  }
+
+  return questions;
+}
+
+function renderWorksheetQuestion(q, index) {
+  const n = index + 1;
+  if (q.type === 'counting') return `
+    <div class="ws-question ws-counting-question"><span class="ws-q-num">${n}.</span><div class="ws-q-content">
+      <div class="ws-instruction"><div>चित्रों को गिनकर संख्या लिखिए:</div><div class="ws-santhali-text">ᱪᱤᱛᱟᱹᱨ ᱠᱚ ᱮᱞ ᱮᱢ ᱚᱞ ᱢᱮ:</div></div>
+      <div class="ws-counting-objects">${Array.from({length: q.answer}, (_, i) => makeObjectSvg(i)).join('')}</div>
+      <div class="ws-answer-line"><span class="ws-blank ws-number-blank"></span></div></div></div>`;
+
+  if (q.type === 'addition') return `
+    <div class="ws-question"><span class="ws-q-num">${n}.</span><div class="ws-q-content">
+      <div class="ws-instruction"><div>जोड़कर उत्तर लिखिए:</div><div class="ws-santhali-text">ᱡᱚᱲ ᱠᱟᱛᱮ ᱡᱚᱵᱟᱵ ᱚᱞ ᱢᱮ:</div></div>
+      <div class="ws-math-equation">${q.a} + ${q.b} = <span class="ws-blank ws-number-blank"></span></div></div></div>`;
+
+  if (q.type === 'subtraction') return `
+    <div class="ws-question"><span class="ws-q-num">${n}.</span><div class="ws-q-content">
+      <div class="ws-instruction"><div>घटाकर उत्तर लिखिए:</div><div class="ws-santhali-text">ᱠᱟᱹᱴ ᱠᱟᱛᱮ ᱡᱚᱵᱟᱵ ᱚᱞ ᱢᱮ:</div></div>
+      <div class="ws-math-equation">${q.a} − ${q.b} = <span class="ws-blank ws-number-blank"></span></div></div></div>`;
+
+  if (q.type === 'number_spelling') return `
+    <div class="ws-question"><span class="ws-q-num">${n}.</span><div class="ws-q-content">
+      <div class="ws-instruction"><div>संख्या का नाम लिखिए:</div><div class="ws-santhali-text">ᱮᱞ ᱨᱮᱭᱟᱜ ᱧᱩᱛᱩᱢ ᱚᱞ ᱢᱮ:</div></div>
+      <div class="ws-number-spelling-row"><span class="ws-large-number">${q.number} / ${q.olchikiNumber || q.number}</span><span class="ws-blank ws-spelling-blank"></span></div></div></div>`;
+
+  if (q.type === 'colors') return `
+    <div class="ws-question ws-picture-identification-question"><span class="ws-q-num">${n}.</span><div class="ws-q-content">
+      <div class="ws-instruction"><div>चित्र का रंग पहचानकर उसका नाम लिखिए:</div><div class="ws-santhali-text">ᱪᱤᱛᱟᱹᱨ ᱨᱮᱭᱟᱜ ᱨᱚᱝ ᱧᱮᱞ ᱠᱟᱛᱮ ᱧᱩᱛᱩᱢ ᱚᱞ ᱢᱮ:</div></div>
+      <div class="ws-color-picture"><svg viewBox="0 0 150 100" class="ws-color-svg"><circle cx="75" cy="50" r="34" fill="${q.color}" stroke="#222" stroke-width="3"/></svg></div>
+      <div class="ws-answer-line"><span class="ws-blank ws-spelling-blank"></span></div></div></div>`;
+
+  if (q.type === 'body_parts') return `
+    <div class="ws-question ws-picture-identification-question"><span class="ws-q-num">${n}.</span><div class="ws-q-content">
+      <div class="ws-instruction"><div>चित्र में दिखाए गए शरीर के अंग का नाम लिखिए:</div><div class="ws-santhali-text">ᱪᱤᱛᱟᱹᱨ ᱨᱮ ᱩᱫᱜᱟᱹ ᱦᱚᱲᱢᱚ ᱵᱷᱟᱜ ᱨᱮᱭᱟᱜ ᱧᱩᱛᱩᱢ ᱚᱞ ᱢᱮ:</div></div>
+      <div class="ws-body-picture">${makeBodyPartSvg(q.part)}</div>
+      <div class="ws-answer-line"><span class="ws-blank ws-spelling-blank"></span></div></div></div>`;
+  return '';
+}
+
+function renderWorksheetAnswer(q, index) {
+  const n = index + 1;
+  let hindiAnswer = '', santhaliAnswer = '';
+  if (q.type === 'number_spelling' || q.type === 'colors' || q.type === 'body_parts') {
+    hindiAnswer = q.hindi; santhaliAnswer = q.santhali;
+  } else {
+    hindiAnswer = String(q.answer); santhaliAnswer = toOlChikiNumber(q.answer);
+  }
+  return `<div class="ws-answer"><span class="ws-a-num">${n}.</span><span><strong>हिन्दी:</strong> ${escapeHtml(hindiAnswer)}</span><span class="ws-answer-santhali"><strong>ᱥᱟᱱᱛᱟᱲᱤ:</strong> ${escapeHtml(santhaliAnswer)}</span></div>`;
+}
+
 
 /* ============================================================
    SCREEN 4 — CORRECTIONS LOG

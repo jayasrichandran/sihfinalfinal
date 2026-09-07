@@ -1413,3 +1413,163 @@ select option { background: var(--clr-card); }
   .fc-quiz-box { padding: 1.5rem 1rem; }
 }
 
+/* =================== UPDATED CLASS 1 FLN WORKSHEET =================== */
+.ws-controls {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ws-q-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ws-instruction {
+  margin-bottom: 0.55rem;
+  color: var(--clr-white);
+  font-weight: 600;
+}
+
+.ws-counting-objects {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 70px;
+  padding: 0.5rem 0;
+  color: var(--clr-maroon);
+}
+
+.ws-object-svg {
+  width: 52px;
+  height: 52px;
+  display: block;
+}
+
+.ws-answer-line {
+  margin-top: 0.25rem;
+}
+
+.ws-number-blank {
+  min-width: 75px;
+  height: 1.5rem;
+  vertical-align: bottom;
+}
+
+.ws-math-equation {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--clr-white);
+  letter-spacing: 0.04em;
+  padding: 0.35rem 0;
+}
+
+.ws-number-spelling-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 58px;
+}
+
+.ws-large-number {
+  min-width: 65px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--clr-white);
+}
+
+.ws-spelling-blank {
+  min-width: 190px;
+  height: 1.5rem;
+}
+
+.worksheet-output-bilingual .ws-santhali-text,
+.worksheet-output-bilingual .ws-answer-santhali {
+  font-family: "Noto Sans Ol Chiki", "Noto Sans", sans-serif;
+}
+
+.worksheet-output-bilingual .ws-santhali-text {
+  margin-top: 0.15rem;
+  font-weight: 600;
+}
+
+.worksheet-output-bilingual .ws-answer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.ws-answer-santhali {
+  margin-left: 0.5rem;
+}
+
+.ws-picture-identification-question .ws-q-content {
+  text-align: center;
+}
+
+.ws-picture-identification-question .ws-instruction {
+  text-align: left;
+}
+
+.ws-color-picture,
+.ws-body-picture {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 130px;
+  margin: 0.6rem 0;
+}
+
+.ws-color-svg {
+  width: 150px;
+  height: 100px;
+}
+
+.ws-body-svg {
+  width: 190px;
+  height: 220px;
+  display: block;
+}
+
+/* Colors / Body Parts curriculum practice visuals */
+.quiz-santhali { margin-top: 0.35rem; font-size: 0.95rem; }
+.quiz-picture-swatch { width: 92px; height: 70px; border-radius: 12px; margin: 0.85rem auto; border: 3px solid #222; }
+.quiz-body-picture { display: flex; justify-content: center; margin: 0.75rem 0; }
+.quiz-body-picture .ws-body-svg { width: 150px; height: 175px; }
+
+/* Print Media Query Extensions for Inline SVGs */
+@media print {
+  .ws-object-svg {
+    color: #000;
+  }
+
+  .ws-math-equation,
+  .ws-large-number,
+  .ws-instruction {
+    color: #000;
+  }
+
+  .ws-color-svg,
+  .ws-body-svg {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
+
+@media (max-width: 800px) {
+  .ws-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .ws-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .ws-spelling-blank {
+    min-width: 130px;
+  }
+}
+
+
